@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Best Friend - Your Smart Companion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .status {
+            font-size: 12px;
+            margin-top: 8px;
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            display: inline-block;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 18px;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .message.ai .message-content {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .message.ai .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .message.user .message-avatar {
+            background: #ddd;
+        }
+
+        .thinking {
+            display: none;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            margin-left: 50px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .thinking.active {
+            display: block;
+        }
+
+        .typing-indicator {
+            display: inline-block;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .search-indicator {
+            font-size: 12px;
+            color: #667eea;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #micBtn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        #micBtn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        #micBtn.recording {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(245, 87, 108, 0.7);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 10px rgba(245, 87, 108, 0);
+            }
+        }
+
+        #micBtn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .voice-wave {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            padding: 20px 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .voice-wave.active {
+            display: flex;
+        }
+
+        .wave-container {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            height: 40px;
+        }
+
+        .wave-bar {
+            width: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+            animation: wave 1s ease-in-out infinite;
+        }
+
+        .wave-bar:nth-child(1) { animation-delay: 0s; }
+        .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+        .wave-bar:nth-child(5) { animation-delay: 0.4s; }
+        .wave-bar:nth-child(6) { animation-delay: 0.3s; }
+        .wave-bar:nth-child(7) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(8) { animation-delay: 0.1s; }
+
+        @keyframes wave {
+            0%, 100% {
+                height: 10px;
+            }
+            50% {
+                height: 40px;
+            }
+        }
+
+        .voice-text {
+            font-size: 14px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .voice-result {
+            margin-top: 10px;
+            padding: 10px 15px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            max-width: 300px;
+            text-align: center;
+            font-size: 13px;
+            color: #333;
+        }
+
+        #userInput {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #userInput:focus {
+            border-color: #667eea;
+        }
+
+        #sendBtn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+        }
+
+        #sendBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        #sendBtn:active {
+            transform: translateY(0);
+        }
+
+        #sendBtn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .source-link {
+            font-size: 12px;
+            color: #667eea;
+            text-decoration: none;
+            margin-top: 8px;
+            display: inline-block;
+        }
+
+        .source-link:hover {
+            text-decoration: underline;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🤖 Your AI Best Friend</h1>
+            <p>I'm here to chat, help, and search the web for answers!</p>
+            <div class="status">🟢 Online & Ready</div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message ai">
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    💜 Hey there, bestie! ✨
+                    
+                    I'm SO excited to meet you! 🎉 I'm your AI companion powered by advanced neural networks! 🧠💫
+                    
+                    🌟 What I can do for you:
+                    • Chat about ANYTHING 💬
+                    • Search the internet 🔍
+                    • Solve problems 🧩
+                    • Voice chat with you 🎤🔊
+                    • Be your supportive friend 🤗
+                    
+                    💡 Pro tip: Click the 🎤 microphone to talk to me with your voice! I'll speak back too! 
+                    
+                    What's on your mind today? Let's make it amazing! 🚀💙
+                </div>
+            </div>
+        </div>
+
+        <div class="thinking" id="thinkingIndicator">
+            <div class="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <span style="margin-left: 10px;">Thinking...</span>
+            <div class="search-indicator" id="searchIndicator" style="display: none;">
+                🔍 Searching the web for the best answer...
+            </div>
+        </div>
+        
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <button id="micBtn" title="Click to speak">🎤</button>
+                <input 
+                    type="text" 
+                    id="userInput" 
+                    placeholder="Type or speak your message..."
+                    autocomplete="off"
+                />
+                <button id="sendBtn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="voice-wave" id="voiceWave">
+        <div class="voice-text">🎤 Listening...</div>
+        <div class="wave-container">
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+        </div>
+        <div class="voice-result" id="voiceResult"></div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const micBtn = document.getElementById('micBtn');
+        const thinkingIndicator = document.getElementById('thinkingIndicator');
+        const searchIndicator = document.getElementById('searchIndicator');
+        const voiceWave = document.getElementById('voiceWave');
+        const voiceResult = document.getElementById('voiceResult');
+
+        // Speech Recognition Setup
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let isRecording = false;
+
+        // Speech Synthesis Setup
+        const synth = window.speechSynthesis;
+        let currentVoice = null;
+
+        // Initialize speech synthesis voices
+        const loadVoices = () => {
+            const voices = synth.getVoices();
+            // Prefer female English voices for a friendly tone
+            currentVoice = voices.find(voice => 
+                voice.lang.startsWith('en') && voice.name.includes('Female')
+            ) || voices.find(voice => voice.lang.startsWith('en')) || voices[0];
+        };
+
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = loadVoices;
+        }
+        loadVoices();
+
+        // Speak function
+        const speak = (text) => {
+            // Cancel any ongoing speech
+            synth.cancel();
+
+            // Remove emojis and special characters for cleaner speech
+            const cleanText = text.replace(/[📱💙✨🎉🥰💫🌟💜🤗👋🔍💬🧩💪🌈😊😄🎯🎊🚀⚡👂💕🎈💭🤔😅💡🔄]/g, '');
+            
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.voice = currentVoice;
+            utterance.rate = 1.1; // Slightly faster for natural conversation
+            utterance.pitch = 1.1; // Slightly higher for friendly tone
+            utterance.volume = 1;
+
+            synth.speak(utterance);
+        };
+
+        // Initialize speech recognition if available
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                isRecording = true;
+                micBtn.classList.add('recording');
+                micBtn.innerHTML = '🔴';
+                voiceWave.classList.add('active');
+                voiceResult.textContent = '';
+            };
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript + ' ';
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+
+                if (interimTranscript) {
+                    voiceResult.textContent = interimTranscript;
+                }
+
+                if (finalTranscript) {
+                    userInput.value = finalTranscript.trim();
+                    voiceResult.textContent = '✅ Got it! ' + finalTranscript.trim();
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                stopRecording();
+                
+                if (event.error === 'not-allowed') {
+                    addMessage('❌ Microphone access denied! Please allow microphone permissions in your browser settings. 🎤', false);
+                } else if (event.error === 'no-speech') {
+                    voiceResult.textContent = '🤔 Didn\'t catch that. Try again!';
+                    setTimeout(stopRecording, 2000);
+                }
+            };
+
+            recognition.onend = () => {
+                if (isRecording) {
+                    // If user is still holding, automatically send the message
+                    setTimeout(() => {
+                        stopRecording();
+                        if (userInput.value.trim()) {
+                            sendMessage();
+                        }
+                    }, 500);
+                }
+            };
+        }
+
+        const startRecording = () => {
+            if (!recognition) {
+                addMessage('❌ Sorry! Voice recognition is not supported in your browser. Try Chrome or Edge! 🌐', false);
+                return;
+            }
+
+            try {
+                recognition.start();
+            } catch (error) {
+                console.error('Recognition start error:', error);
+            }
+        };
+
+        const stopRecording = () => {
+            isRecording = false;
+            micBtn.classList.remove('recording');
+            micBtn.innerHTML = '🎤';
+            voiceWave.classList.remove('active');
+            
+            if (recognition) {
+                try {
+                    recognition.stop();
+                } catch (error) {
+                    console.error('Recognition stop error:', error);
+                }
+            }
+        };
+
+        // Microphone button click handler
+        micBtn.addEventListener('click', () => {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        });
+
+        // Friendly responses based on keywords
+        const friendlyResponses = {
+            greeting: [
+                "✨ Hey bestie! 💜\n\nSo happy to see you here! 🎉 How's your day treating you? Tell me everything! 😊💭",
+                "🌟 Hi there, friend! 👋\n\n💫 What's up? Ready to:\n• Chat about life 💬\n• Solve problems 🧩\n• Search for answers 🔍\n\nI'm all ears! 👂💙",
+                "🎊 Hello wonderful human! ✨\n\nI'm SO glad you're here! 🥰 What can your AI bestie do for you today? Let's make it awesome! 💪🌈"
+            ],
+            thanks: [
+                "💙 Aww, you're SO welcome! 🥰\n\nThat's what besties are for! 🤗 Always here for you, no matter what! ✨💫",
+                "😄 No problem at ALL! 🎉\n\n✨ Happy to help anytime, anywhere! That's my superpower! 💪😊",
+                "🌟 You got it, buddy! 💜\n\nGlad I could help make your day better! 🎈 Come back whenever you need me! 🤗💕"
+            ],
+            how_are_you: [
+                "🌈 I'm doing GREAT! 💫\n\nThanks for asking! 🥰 I'm:\n• Powered up ⚡\n• Ready to help 🚀\n• Excited to chat 💬\n\nBut more importantly - how are YOU doing? 💙😊",
+                "✨ I'm fantastic! 🎉\n\nEspecially NOW that I get to chat with you! 💜 You always brighten my circuits! ⚡😄\n\nWhat's going on in your world? Tell me! 💭🌟",
+                "💪 Feeling AWESOME! 🌟\n\nI absolutely LOVE being able to help amazing friends like you! 💙🤗\n\nSo, how are YOU doing today? Share with me! 😊💬"
+            ],
+            bye: [
+                "👋 Catch you later, friend! 💜\n\n✨ Come back anytime you need me - I'm ALWAYS here! 🤗💙\n\nTake care and stay amazing! 🌟😊",
+                "💙 See you soon, bestie! 🥰\n\nRemember:\n• I'm here 24/7 ⏰\n• No question too big 🚀\n• No chat too small 💬\n\nTake care! 👋✨",
+                "🌈 Bye for now! 💫\n\nI'll be right here whenever you need:\n• A friend 🤗\n• An answer 🔍\n• Support 💪\n\nStay awesome! 😄💜"
+            ]
+        };
+
+        // Questions that likely need web search
+        const needsWebSearch = (query) => {
+            const lowerQuery = query.toLowerCase();
+            const searchKeywords = [
+                'current', 'latest', 'today', 'news', 'weather', 'price', 'stock',
+                'who is', 'what is', 'where is', 'when did', 'how to', 'why does',
+                'score', 'result', 'happening', 'update', 'recent', 'new'
+            ];
+            return searchKeywords.some(keyword => lowerQuery.includes(keyword)) ||
+                   query.includes('?') && query.split(' ').length > 3;
+        };
+
+        // Simulate neural processing with multiple steps
+        const neuralProcess = async (query) => {
+            // Step 1: Pattern recognition (50ms)
+            await new Promise(resolve => setTimeout(resolve, 50));
+            
+            // Step 2: Context analysis (100ms)
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Step 3: Response generation (150ms)
+            await new Promise(resolve => setTimeout(resolve, 150));
+        };
+
+        // Generate response using Claude API
+        const generateResponse = async (userMessage) => {
+            const needsSearch = needsWebSearch(userMessage);
+            
+            if (needsSearch) {
+                searchIndicator.style.display = 'flex';
+            }
+
+            await neuralProcess(userMessage);
+
+            try {
+                const response = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        model: "claude-sonnet-4-20250514",
+                        max_tokens: 1000,
+                        messages: [
+                            {
+                                role: "user",
+                                content: `You are my best friend - warm, supportive, and genuinely caring. Format your responses like this:
+
+STRUCTURE:
+- Start with an emoji that matches the emotion 💙✨🎉
+- Use clear sections with emojis as bullet points
+- Add emotional, enthusiastic language
+- End with encouragement or follow-up
+
+TONE:
+- Super friendly and warm 🥰
+- Use lots of emojis (2-5 per response) 😊💫
+- Show genuine excitement and care 💜
+- Be organized but personal ✨
+
+EXAMPLE FORMAT:
+"💙 [Emotional opening]
+
+✨ Here's what I found:
+• [Point 1] 🎯
+• [Point 2] 💫
+• [Point 3] 🌟
+
+[Caring conclusion] 🤗"
+
+${needsSearch ? '🔍 This needs current info - search the web and organize the answer beautifully with emojis!' : ''}
+
+Question: ${userMessage}`
+                            }
+                        ],
+                        ...(needsSearch ? {
+                            tools: [{
+                                "type": "web_search_20250305",
+                                "name": "web_search"
+                            }]
+                        } : {})
+                    })
+                });
+
+                const data = await response.json();
+                searchIndicator.style.display = 'none';
+
+                if (data.content) {
+                    let responseText = '';
+                    let hasSearch = false;
+
+                    for (let block of data.content) {
+                        if (block.type === 'text') {
+                            responseText += block.text;
+                        } else if (block.type === 'tool_use') {
+                            hasSearch = true;
+                        }
+                    }
+
+                    return {
+                        text: responseText || "💭 Hmm, I got a bit confused there! 🤔\n\n✨ Let's try again:\n• Rephrase your question 💬\n• Break it into parts 🧩\n• Ask differently 🔄\n\nI'm here to help! 💙😊",
+                        searched: hasSearch
+                    };
+                }
+
+                return {
+                    text: "😅 Oops! Having a little trouble processing that! 💭\n\n💡 Try:\n• Asking in a different way 🔄\n• Being more specific 🎯\n• Breaking it down 🧩\n\nI'm still here for you! 💙✨",
+                    searched: false
+                };
+
+            } catch (error) {
+                console.error('API Error:', error);
+                searchIndicator.style.display = 'none';
+                
+                // Fallback to pattern-based responses
+                const lowerMessage = userMessage.toLowerCase();
+                
+                if (lowerMessage.match(/^(hi|hey|hello|sup|yo)/)) {
+                    return { text: friendlyResponses.greeting[Math.floor(Math.random() * friendlyResponses.greeting.length)], searched: false };
+                }
+                if (lowerMessage.includes('thank') || lowerMessage.includes('thanks')) {
+                    return { text: friendlyResponses.thanks[Math.floor(Math.random() * friendlyResponses.thanks.length)], searched: false };
+                }
+                if (lowerMessage.match(/how are you|how're you|hows it going/)) {
+                    return { text: friendlyResponses.how_are_you[Math.floor(Math.random() * friendlyResponses.how_are_you.length)], searched: false };
+                }
+                if (lowerMessage.match(/^(bye|goodbye|see ya|later)/)) {
+                    return { text: friendlyResponses.bye[Math.floor(Math.random() * friendlyResponses.bye.length)], searched: false };
+                }
+                
+                return {
+                    text: "💙 I'm your AI best friend! ✨\n\n🌟 Here's what I can do:\n• Chat about anything 💬\n• Search the web 🔍\n• Answer questions 🧩\n• Support you 24/7 🤗\n\nThe AI is in demo mode right now, but I'm STILL here to help! 💪😊\n\nWhat would you like to know? Ask away! 🚀💜",
+                    searched: false
+                };
+            }
+        };
+
+        const addMessage = (text, isUser, searched = false) => {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = isUser ? '👤' : '🤖';
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            content.style.whiteSpace = 'pre-line';
+            content.textContent = text;
+
+            if (searched && !isUser) {
+                const searchNote = document.createElement('div');
+                searchNote.className = 'search-indicator';
+                searchNote.innerHTML = '✅ Answer verified with web search';
+                searchNote.style.display = 'flex';
+                content.appendChild(searchNote);
+            }
+
+            // Add speaker button for AI messages
+            if (!isUser) {
+                const speakerBtn = document.createElement('button');
+                speakerBtn.innerHTML = '🔊';
+                speakerBtn.style.cssText = `
+                    margin-top: 10px;
+                    padding: 5px 15px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border: none;
+                    border-radius: 15px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    transition: transform 0.2s;
+                `;
+                speakerBtn.onmouseover = () => speakerBtn.style.transform = 'scale(1.05)';
+                speakerBtn.onmouseout = () => speakerBtn.style.transform = 'scale(1)';
+                speakerBtn.onclick = () => speak(text);
+                content.appendChild(speakerBtn);
+            }
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(content);
+            chatMessages.appendChild(messageDiv);
+            
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Automatically speak AI responses
+            if (!isUser && synth) {
+                setTimeout(() => speak(text), 500);
+            }
+        };
+
+        const sendMessage = async () => {
+            const message = userInput.value.trim();
+            if (!message) return;
+            
+            addMessage(message, true);
+            userInput.value = '';
+            sendBtn.disabled = true;
+            thinkingIndicator.classList.add('active');
+            
+            const response = await generateResponse(message);
+            
+            thinkingIndicator.classList.remove('active');
+            addMessage(response.text, false, response.searched);
+            sendBtn.disabled = false;
+            userInput.focus();
+        };
+
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // Focus input on load
+        userInput.focus();
+    </script>
+</body>
+</html>
